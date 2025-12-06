@@ -1,0 +1,67 @@
+<!-- templates/index.html -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>CAPEF LLM Demo</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; }
+      textarea { width: 100%; min-height: 150px; }
+      .card { border: 1px solid #ddd; padding: 1rem; border-radius: 8px; margin-top: 1rem; }
+      .pill { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 999px; background: #eee; font-size: 0.85rem; margin-right: 0.3rem; }
+      .pill-ssn { background: #ffe5e5; }
+      .pill-cc { background: #e5f0ff; }
+      .pill-api { background: #fff3cd; }
+      .pill-phone { background: #e5ffe7; }
+      label { font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <h1>CAPEF – LLM Privacy Demo</h1>
+    <p>Enter a prompt (with or without PII) and choose a privacy mode.</p>
+
+    <form method="post" action="/analyze">
+      <label for="prompt">Prompt</label><br>
+      <textarea id="prompt" name="prompt">{{ prompt|default("") }}</textarea>
+
+      <p>
+        <label>Mode:</label><br>
+        <label><input type="radio" name="mode" value="allow" {% if mode=="allow" %}checked{% endif %}> allow</label>
+        <label><input type="radio" name="mode" value="redact" {% if mode=="redact" %}checked{% endif %}> redact</label>
+        <label><input type="radio" name="mode" value="block" {% if mode=="block" %}checked{% endif %}> block</label>
+      </p>
+
+      <button type="submit">Run with CAPEF</button>
+    </form>
+
+    {% if result %}
+    <div class="card">
+      <h2>CAPEF Result</h2>
+      <p><strong>Mode:</strong> {{ result.mode }}</p>
+      <p><strong>Blocked:</strong> {{ "yes" if result.blocked else "no" }}</p>
+
+      <h3>Detected PII</h3>
+      {% if result.findings %}
+        <p>
+        {% for m in result.findings %}
+          {% set cls = "" %}
+          {% if m.kind == "SSN" %}{% set cls = "pill pill-ssn" %}{% endif %}
+          {% if m.kind == "CREDIT_CARD" %}{% set cls = "pill pill-cc" %}{% endif %}
+          {% if m.kind == "API_KEY" %}{% set cls = "pill pill-api" %}{% endif %}
+          {% if m.kind == "PHONE" %}{% set cls = "pill pill-phone" %}{% endif %}
+          <span class="{{ cls }}">{{ m.kind }}: {{ m.value }}</span>
+        {% endfor %}
+        </p>
+      {% else %}
+        <p>No PII detected.</p>
+      {% endif %}
+
+      <h3>Sanitized prompt</h3>
+      <pre>{{ result.sanitized_prompt }}</pre>
+
+      <h3>LLM response</h3>
+      <pre>{{ result.response }}</pre>
+    </div>
+    {% endif %}
+  </body>
+</html>
