@@ -1,0 +1,6 @@
+{
+  "rules": {
+    "user_id": "REDACT_IF_SSN",
+    "private_key": "REDACT_IF_PRESENT"
+  }
+}
